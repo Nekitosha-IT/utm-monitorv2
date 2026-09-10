@@ -6,7 +6,7 @@
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
       <TextBlock Text="EGAIS Inspector" FontSize="26" FontWeight="SemiBold" VerticalAlignment="Center"/>
       <TextBlock Grid.Column="1" Text="{Binding UpdateStatus}" VerticalAlignment="Center" Margin="0,0,12,0" Opacity="0.75"/>
-      <Button Grid.Column="2" Content="⟳ Проверить обновление" Command="{Binding CheckForUpdatesCommand}" Padding="14,8"/>
+      <Button Grid.Column="2" Content="⟳ Автообновление" Command="{Binding AutoUpdateCommand}" Padding="14,8"/>
     </Grid>
     <Border Grid.Row="1" Background="{DynamicResource CardBackground}" CornerRadius="14" Padding="12" Margin="0,0,14,0">
       <ListBox ItemsSource="{Binding NavigationItems}" SelectedIndex="0" Width="190"/>
@@ -28,11 +28,11 @@
           <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,8,0,0">
             <StackPanel>
               <TextBlock Text="AI Диагностика и логи" FontSize="20" FontWeight="SemiBold"/>
-              <TextBlock Text="AI будет использовать диагностические события и ошибки для дальнейшей доработки приложения." TextWrapping="Wrap" Margin="0,8,0,12"/>
+              <TextBlock Text="Программа сохраняет диагностические события. По этим логам будем находить реальные проблемы и дорабатывать ЕГАИС Inspector." TextWrapping="Wrap" Margin="0,8,0,12"/>
               <TextBlock Text="{Binding LogStatus}" Opacity="0.75" TextWrapping="Wrap" Margin="0,0,0,10"/>
               <StackPanel Orientation="Horizontal">
                 <Button Content="Открыть папку логов" Command="{Binding OpenLogFolderCommand}" Padding="14,8" Margin="0,0,10,0"/>
-                <Button Content="Проверить обновление" Command="{Binding CheckForUpdatesCommand}" Padding="14,8"/>
+                <Button Content="Запустить автообновление" Command="{Binding AutoUpdateCommand}" Padding="14,8"/>
               </StackPanel>
             </StackPanel>
           </Border>
