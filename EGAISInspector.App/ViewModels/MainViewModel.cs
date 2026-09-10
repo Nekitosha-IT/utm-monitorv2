@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using EGAISInspector.App;
 using EGAISInspector.Core.Services;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows;
 
 namespace EGAISInspector.App.ViewModels;
