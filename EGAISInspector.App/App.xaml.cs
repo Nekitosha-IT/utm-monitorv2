@@ -1,5 +1,5 @@
 using System.Windows;
-using Velopack;
+using System.Windows.Media;
 using EGAISInspector.Core.Services;
 
 namespace EGAISInspector.App;
