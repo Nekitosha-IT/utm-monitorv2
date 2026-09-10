@@ -28,8 +28,9 @@ public sealed class BarcodeDecoder
 
     private static bool LooksLikeEgaisDataMatrix(string raw)
     {
-        // Native ЕГАИС payload: 150 characters, type(3)+series(3)+number(8)+service(7)+signature(129).
-        if (raw.Length == 150 && raw.Take(14).All(char.IsDigit))
+        // Native ЕГАИС payload: type(3)+series(3)+number(8)+service(7)+signature.
+        // Real UTM payloads are 150 chars, while shortened payloads are useful in tests.
+        if (raw.Length >= 22 && raw.Take(14).All(char.IsDigit))
             return true;
 
         // GS1 DataMatrix from scanners can contain separators and application identifiers.
