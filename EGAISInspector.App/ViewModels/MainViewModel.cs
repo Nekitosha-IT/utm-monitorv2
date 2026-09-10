@@ -4,7 +4,7 @@ using EGAISInspector.Core.Barcodes;
 using EGAISInspector.Core.Services;
 using EGAISInspector.Core.Utm;
 using System.Collections.ObjectModel;
-using System.Text;
+using System.Net.Http;
 using System.Windows;
 using EGAISInspector.App;
 
