@@ -16,6 +16,10 @@ public sealed class EgaisConfiguration
 
     public void Validate()
     {
+        FsrARId = FsrARId.Trim();
+        UtmBaseUrl = UtmBaseUrl.Trim().TrimEnd('/');
+        DatabaseDirectory = ExpandEnvironmentVariables(DatabaseDirectory.Trim());
+
         if (string.IsNullOrWhiteSpace(FsrARId))
             throw new InvalidOperationException("FSRAR_ID не задан в конфигурации.");
 
@@ -31,6 +35,14 @@ public sealed class EgaisConfiguration
 
         if (string.IsNullOrWhiteSpace(DatabaseDirectory))
             throw new InvalidOperationException("DatabaseDirectory не задан.");
+    }
+
+    private static string ExpandEnvironmentVariables(string value)
+    {
+        if (value.Contains('%'))
+            value = Environment.ExpandEnvironmentVariables(value);
+
+        return value.Replace('/', Path.DirectorySeparatorChar);
     }
 }
 
