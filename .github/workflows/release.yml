@@ -7,15 +7,15 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version, for example 0.1.0-preview'
+        description: 'Release version, for example 0.1.1-preview'
         required: true
-        default: '0.1.0-preview'
+        default: '0.1.1-preview'
 
 permissions:
   contents: write
 
 env:
-  RELEASE_VERSION: 0.1.0-preview
+  RELEASE_TRIGGER_FILE: .release-trigger/v0.1.0-preview
 
 jobs:
   release:
@@ -28,6 +28,22 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+
+      - name: Resolve version
+        shell: pwsh
+        run: |
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $version = '${{ inputs.version }}'
+          } else {
+            $line = Get-Content -LiteralPath $env:RELEASE_TRIGGER_FILE | Where-Object { $_ -match '^release\s+v?(.+)$' } | Select-Object -First 1
+            if (-not $line) { throw "Release version was not found in $env:RELEASE_TRIGGER_FILE" }
+            $version = [regex]::Match($line, '^release\s+v?(.+)$').Groups[1].Value.Trim()
+          }
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
+            throw "Invalid release version: $version"
+          }
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Resolved release version: $version"
 
       - name: Restore
         run: dotnet restore EGAISInspector.sln --runtime win-x64
@@ -46,16 +62,6 @@ jobs:
 
       - name: Install Velopack CLI
         run: dotnet tool install -g vpk
-
-      - name: Resolve version
-        shell: pwsh
-        run: |
-          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
-            $version = '${{ inputs.version }}'
-          } else {
-            $version = $env:RELEASE_VERSION
-          }
-          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Pack Velopack beta release
         shell: pwsh
