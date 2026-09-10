@@ -10,6 +10,7 @@ public partial class App : Application
     {
         base.OnStartup(e);
         RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.Default;
+        AppLogger.Info($"EGAIS Inspector started. OS={Environment.OSVersion}; Runtime={Environment.Version}.");
 
         var window = new MainWindow();
         MainWindow = window;
@@ -20,9 +21,16 @@ public partial class App : Application
 
     private static async Task RunAutoUpdateAsync()
     {
-        await Task.Delay(TimeSpan.FromSeconds(5));
-
-        var service = new UpdateService();
-        await service.DownloadAndRestartAsync(includePrerelease: true);
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            AppLogger.Info("Automatic update check started.");
+            var updated = await new UpdateService().DownloadAndRestartAsync(includePrerelease: true);
+            AppLogger.Info(updated ? "Automatic update applied; restart requested." : "Automatic update check finished; no update applied.");
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Error("Automatic update check failed.", ex);
+        }
     }
 }
