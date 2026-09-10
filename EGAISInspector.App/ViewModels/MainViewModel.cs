@@ -1,7 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using EGAISInspector.App;
 using EGAISInspector.Core.Services;
 using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace EGAISInspector.App.ViewModels;
 
@@ -16,6 +18,8 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string updateStatus = "Автообновление включено";
     [ObservableProperty] private bool isCheckingUpdate;
     [ObservableProperty] private string logStatus = "Лог: ещё не загружен";
+    [ObservableProperty] private string diagnosticsStatus = "GitHub: не настроен";
+    [ObservableProperty] private bool isUploadingDiagnostics;
 
     public ObservableCollection<string> Events { get; } = new();
     public ObservableCollection<string> NavigationItems { get; } = new(new[]
@@ -28,6 +32,7 @@ public partial class MainViewModel : ObservableObject
     {
         AppLogger.Info("Application dashboard initialized.");
         RefreshLogStatus();
+        RefreshDiagnosticsStatus();
     }
 
     [RelayCommand]
@@ -101,6 +106,58 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task UploadDiagnosticsAsync()
+    {
+        if (IsUploadingDiagnostics)
+            return;
+
+        var service = new GitHubDiagnosticsService();
+        if (!service.IsConfigured)
+        {
+            var settings = new GitHubSettingsWindow { Owner = Application.Current.MainWindow };
+            settings.ShowDialog();
+            RefreshDiagnosticsStatus();
+            if (!service.IsConfigured)
+                return;
+        }
+
+        IsUploadingDiagnostics = true;
+        DiagnosticsStatus = "GitHub: отправляю диагностику…";
+        AppLogger.Info("GitHub diagnostics upload started.");
+
+        try
+        {
+            var result = await service.UploadCurrentLogAsync();
+            DiagnosticsStatus = result.Success
+                ? $"GitHub: ✓ отправлено {DateTime.Now:HH:mm:ss}"
+                : $"GitHub: {result.Message}";
+
+            if (result.Success)
+                AppLogger.Info($"GitHub diagnostics uploaded. Commit: {result.CommitSha ?? "unknown"}.");
+            else
+                AppLogger.Warning($"GitHub diagnostics upload failed: {result.Message}");
+        }
+        catch (Exception ex)
+        {
+            DiagnosticsStatus = $"GitHub: ошибка — {ex.Message}";
+            AppLogger.Error("GitHub diagnostics upload failed unexpectedly.", ex);
+        }
+        finally
+        {
+            IsUploadingDiagnostics = false;
+            RefreshLogStatus();
+        }
+    }
+
+    [RelayCommand]
+    private void ConfigureGitHubDiagnostics()
+    {
+        var settings = new GitHubSettingsWindow { Owner = Application.Current.MainWindow };
+        settings.ShowDialog();
+        RefreshDiagnosticsStatus();
+    }
+
+    [RelayCommand]
     private void OpenLogFolder()
     {
         try
@@ -132,6 +189,20 @@ public partial class MainViewModel : ObservableObject
         catch
         {
             LogStatus = "Лог: недоступен";
+        }
+    }
+
+    private void RefreshDiagnosticsStatus()
+    {
+        try
+        {
+            DiagnosticsStatus = new GitHubDiagnosticsService().IsConfigured
+                ? "GitHub: токен настроен (DPAPI)"
+                : "GitHub: токен не настроен";
+        }
+        catch
+        {
+            DiagnosticsStatus = "GitHub: статус недоступен";
         }
     }
 }
