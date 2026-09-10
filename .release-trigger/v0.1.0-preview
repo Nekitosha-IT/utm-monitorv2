@@ -1,3 +1,2 @@
-release v0.1.0-preview
-retry 2026-09-10 final trigger 9
-features: persistent diagnostics, AI diagnostics entry, manual auto-update
+release v0.1.1-preview
+2026-09-10 build: diagnostics, DPAPI, GitHub upload, automatic update pipeline
