@@ -1,0 +1,65 @@
+<ui:FluentWindow x:Class="EGAISInspector.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="EGAIS Inspector" MinWidth="800" MinHeight="600" Width="1280" Height="800"
+    UseLayoutRounding="True" SnapsToDevicePixels="True">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" Margin="0,0,0,16">
+            <TextBlock Text="EGAIS Inspector" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,24,0" />
+            <ComboBox Grid.Column="1" MinWidth="180" Margin="0,0,12,0" VerticalAlignment="Center" SelectedIndex="0">
+                <ComboBoxItem Content="УТМ не подключён" />
+            </ComboBox>
+            <ui:Button Grid.Column="2" Content="Сканировать" Margin="6,0" />
+            <ui:Button Grid.Column="3" Content="Обновить" Margin="6,0" />
+            <ui:Button Grid.Column="4" Content="⚙" Margin="6,0" />
+        </Grid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Background="{DynamicResource CardBackground}" CornerRadius="14" Padding="8" Margin="0,0,16,0">
+                <StackPanel>
+                    <ui:Button Content="⌂  Дашборд" Margin="0,0,0,6" />
+                    <ui:Button Content="▣  Поиск по марке" Margin="0,0,0,6" />
+                    <ui:Button Content="A/B  Справки А/Б" Margin="0,0,0,6" />
+                    <ui:Button Content="⇄  ТТН" Margin="0,0,0,6" />
+                    <ui:Button Content="▤  Остатки" Margin="0,0,0,6" />
+                    <ui:Button Content="◷  История движения" Margin="0,0,0,6" />
+                    <ui:Button Content="✓  Сертификаты и УТМ" Margin="0,0,0,6" />
+                    <ui:Button Content="▥  Отчёты" Margin="0,0,0,6" />
+                    <ui:Button Content="⚙  Настройки" />
+                </StackPanel>
+            </Border>
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Дашборд" FontSize="32" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <Grid Grid.Row="1" Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <ui:Card Grid.Column="0" Margin="4" Padding="18"><StackPanel><TextBlock Text="УТМ" FontSize="16"/><TextBlock Text="Не подключён" FontSize="24" FontWeight="SemiBold"/><TextBlock Text="Добавьте адрес УТМ в настройках" Opacity="0.65"/></StackPanel></ui:Card>
+                        <ui:Card Grid.Column="1" Margin="4" Padding="18"><StackPanel><TextBlock Text="Бутылки" FontSize="16"/><TextBlock Text="0" FontSize="30" FontWeight="SemiBold"/></StackPanel></ui:Card>
+                        <ui:Card Grid.Column="2" Margin="4" Padding="18"><StackPanel><TextBlock Text="Активные ТТН" FontSize="16"/><TextBlock Text="0" FontSize="30" FontWeight="SemiBold"/></StackPanel></ui:Card>
+                        <ui:Card Grid.Column="3" Margin="4" Padding="18"><StackPanel><TextBlock Text="Проблемы" FontSize="16"/><TextBlock Text="0" FontSize="30" FontWeight="SemiBold"/></StackPanel></ui:Card>
+                    </Grid>
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <ui:Card Grid.Column="0" Margin="4" Padding="18"><StackPanel><TextBlock Text="Последние события" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="История сканирования и документов появится после подключения УТМ." Opacity="0.65" Margin="0,12,0,0"/></StackPanel></ui:Card>
+                        <ui:Card Grid.Column="1" Margin="4" Padding="18"><StackPanel><TextBlock Text="Предупреждения" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="Система готова к подключению." Opacity="0.65" Margin="0,12,0,0"/></StackPanel></ui:Card>
+                    </Grid>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</ui:FluentWindow>
