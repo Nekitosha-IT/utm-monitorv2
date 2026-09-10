@@ -2,9 +2,6 @@ name: release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
-      - 'v*.*.*-*'
     paths:
       - '.release-trigger/v0.1.0-preview'
   workflow_dispatch:
@@ -55,8 +52,6 @@ jobs:
         run: |
           if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
             $version = '${{ inputs.version }}'
-          } elseif ('${{ github.ref_name }}' -match '^v') {
-            $version = '${{ github.ref_name }}'.TrimStart('v')
           } else {
             $version = $env:RELEASE_VERSION
           }
