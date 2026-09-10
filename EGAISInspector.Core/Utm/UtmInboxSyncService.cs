@@ -16,7 +16,25 @@ public sealed class UtmInboxSyncService(UtmClient client, EgaisDbContext db)
         var found = 0;
         var downloaded = 0;
         var saved = 0;
-        var queue = await client.GetOutputQueueAsync(ct);
+
+        var queueResult = await client.GetOutputQueueAsync(ct);
+        if (!queueResult.Success)
+        {
+            errors.Add($"Не удалось получить очередь УТМ: {queueResult.Error ?? $"HTTP {(int)queueResult.StatusCode}"}");
+            return new(0, 0, 0, 1, errors);
+        }
+
+        XDocument queue;
+        try
+        {
+            queue = XDocument.Parse(queueResult.Content, LoadOptions.PreserveWhitespace);
+        }
+        catch (XmlException ex)
+        {
+            errors.Add($"УТМ вернул некорректный XML очереди: {ex.Message}");
+            return new(0, 0, 0, 1, errors);
+        }
+
         var items = EgaisResponseParser.ParseQueue(queue);
         found = items.Count;
 
@@ -28,7 +46,7 @@ public sealed class UtmInboxSyncService(UtmClient client, EgaisDbContext db)
 
             var path = absolute.AbsolutePath;
             var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            if (segments.Length < 4)
+            if (segments.Length < 2)
             {
                 errors.Add($"Некорректный URL очереди: {item.Url}");
                 continue;
@@ -40,11 +58,25 @@ public sealed class UtmInboxSyncService(UtmClient client, EgaisDbContext db)
 
             try
             {
-                if (await db.EgaisDocuments.AnyAsync(x => x.ExternalId == externalId, ct))
+                var documentResult = await client.GetDocumentAsync(type, id, ct);
+                if (!documentResult.Success)
+                {
+                    errors.Add($"{type}/{id}: {documentResult.Error ?? $"HTTP {(int)documentResult.StatusCode}"}");
                     continue;
+                }
 
-                var document = await client.GetDocumentAsync(type, id, ct);
                 downloaded++;
+
+                XDocument document;
+                try
+                {
+                    document = XDocument.Parse(documentResult.Content, LoadOptions.PreserveWhitespace);
+                }
+                catch (XmlException ex)
+                {
+                    errors.Add($"{type}/{id}: некорректный XML: {ex.Message}");
+                    continue;
+                }
 
                 foreach (var parsed in EgaisDocumentParser.ParseMany(document))
                 {
@@ -82,8 +114,15 @@ public sealed class UtmInboxSyncService(UtmClient client, EgaisDbContext db)
                 }
 
                 await db.SaveChangesAsync(ct);
+
+                if (!string.IsNullOrWhiteSpace(item.Id))
+                {
+                    var deleteResult = await client.DeleteOutputAsync(item.Id!, ct);
+                    if (!deleteResult.Success)
+                        errors.Add($"{type}/{id}: документ сохранён, но не удалён из очереди: {deleteResult.Error ?? $"HTTP {(int)deleteResult.StatusCode}"}");
+                }
             }
-            catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or XmlException)
+            catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
             {
                 errors.Add($"{type}/{id}: {ex.Message}");
             }
