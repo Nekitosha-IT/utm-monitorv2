@@ -1,0 +1,79 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version, for example 0.1.0'
+        required: true
+        default: '0.1.0'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore EGAISInspector.sln
+
+      - name: Test
+        run: dotnet test EGAISInspector.Tests/EGAISInspector.Tests.csproj --configuration Release --no-restore
+
+      - name: Publish self-contained Windows x64
+        run: >-
+          dotnet publish EGAISInspector.App/EGAISInspector.App.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained true
+          --output artifacts/publish
+          --no-restore
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk
+
+      - name: Resolve version
+        shell: pwsh
+        run: |
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $version = '${{ inputs.version }}'
+          } else {
+            $version = '${{ github.ref_name }}'.TrimStart('v')
+          }
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Pack Velopack beta release
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/release | Out-Null
+          vpk pack `
+            --packId EGAISInspector `
+            --packVersion $env:VERSION `
+            --packDir artifacts/publish `
+            --mainExe EGAISInspector.exe `
+            --packTitle "EGAIS Inspector" `
+            --packAuthors "Nekitosha-IT" `
+            --channel beta `
+            --outputDir artifacts/release
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: EGAIS Inspector v${{ env.VERSION }}
+          prerelease: true
+          generate_release_notes: true
+          files: |
+            artifacts/release/*
