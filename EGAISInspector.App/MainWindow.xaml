@@ -1,0 +1,28 @@
+<Window x:Class="EGAISInspector.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" Title="EGAIS Inspector" MinWidth="800" MinHeight="600" UseLayoutRounding="True" SnapsToDevicePixels="True" WindowStartupLocation="CenterScreen">
+  <Grid Margin="16">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <TextBlock Grid.ColumnSpan="2" Text="EGAIS Inspector" FontSize="26" FontWeight="SemiBold" Margin="0,0,0,14"/>
+    <Border Grid.Row="1" Background="{DynamicResource CardBackground}" CornerRadius="14" Padding="12" Margin="0,0,14,0">
+      <ListBox ItemsSource="{Binding NavigationItems}" SelectedIndex="0" Width="190"/>
+    </Border>
+    <ScrollViewer Grid.Row="1" Grid.Column="1" VerticalScrollBarVisibility="Auto">
+      <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <TextBlock Text="Дашборд" FontSize="30" FontWeight="SemiBold" Margin="0,0,0,16"/>
+        <Grid Grid.Row="1">
+          <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+          <Border Grid.Column="0" Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="УТМ"/><TextBlock Text="{Binding UtmStatus}" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="{Binding Organization}"/></StackPanel></Border>
+          <Border Grid.Column="1" Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="FSRAR_ID"/><TextBlock Text="{Binding FsrarId}" FontSize="20"/></StackPanel></Border>
+          <Border Grid.Column="2" Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="Версия УТМ"/><TextBlock Text="{Binding UtmVersion}" FontSize="20"/></StackPanel></Border>
+          <Border Grid.Column="3" Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="RSA"/><TextBlock Text="{Binding CertificateDays, StringFormat=Осталось {0} дн.}" FontSize="20"/></StackPanel></Border>
+        </Grid>
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+          <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+          <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8"><StackPanel><TextBlock Text="Последние события" FontSize="20" FontWeight="SemiBold"/><ItemsControl ItemsSource="{Binding Events}" Margin="0,10,0,0"/></StackPanel></Border>
+          <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,8,0,0"><StackPanel><TextBlock Text="Предупреждения" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="Проверка сертификатов и документов будет выполняться после подключения УТМ." TextWrapping="Wrap" Margin="0,10,0,0"/></StackPanel></Border>
+        </Grid>
+      </Grid>
+    </ScrollViewer>
+  </Grid>
+</Window>

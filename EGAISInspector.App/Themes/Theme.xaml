@@ -1,0 +1,9 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <SolidColorBrush x:Key="CardBackground" Color="#16000000"/>
+  <Style x:Key="CardStyle" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
+    <Setter Property="CornerRadius" Value="14"/>
+    <Setter Property="Padding" Value="18"/>
+    <Setter Property="Margin" Value="4"/>
+  </Style>
+</ResourceDictionary>
