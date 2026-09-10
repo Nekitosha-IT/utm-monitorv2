@@ -1,4 +1,5 @@
 using EGAISInspector.Core.Barcodes;
+using Xunit;
 
 namespace EGAISInspector.Tests;
 
