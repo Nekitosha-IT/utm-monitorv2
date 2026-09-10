@@ -1,46 +1,81 @@
-<Window x:Class="EGAISInspector.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="EGAIS Inspector" MinWidth="800" MinHeight="600" UseLayoutRounding="True" SnapsToDevicePixels="True" WindowStartupLocation="CenterScreen">
-  <Grid Margin="16">
-    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-    <Grid Grid.ColumnSpan="2" Margin="0,0,0,14">
-      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-      <TextBlock Text="EGAIS Inspector" FontSize="26" FontWeight="SemiBold" VerticalAlignment="Center"/>
-      <TextBlock Grid.Column="1" Text="{Binding UpdateStatus}" VerticalAlignment="Center" Margin="0,0,12,0" Opacity="0.75"/>
-      <Button Grid.Column="2" Content="⟳ Автообновление" Command="{Binding AutoUpdateCommand}" Padding="14,8"/>
+<Window x:Class="EGAISInspector.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="EGAIS Inspector" MinWidth="800" MinHeight="600" Width="1100" Height="720" UseLayoutRounding="True" SnapsToDevicePixels="True" WindowStartupLocation="CenterScreen">
+  <Window.Resources>
+    <Style TargetType="Border" x:Key="Card">
+      <Setter Property="Background" Value="{DynamicResource CardBackground}"/>
+      <Setter Property="CornerRadius" Value="14"/>
+      <Setter Property="Padding" Value="18"/>
+      <Setter Property="Margin" Value="0,0,0,14"/>
+    </Style>
+    <Style TargetType="TextBox">
+      <Setter Property="Padding" Value="12,8"/>
+      <Setter Property="FontSize" Value="15"/>
+    </Style>
+    <Style TargetType="Button">
+      <Setter Property="Padding" Value="16,9"/>
+      <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+  </Window.Resources>
+
+  <Grid Margin="18">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+
+    <Grid Margin="0,0,0,16">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <StackPanel>
+        <TextBlock Text="EGAIS Inspector" FontSize="28" FontWeight="SemiBold"/>
+        <TextBlock Text="УТМ + проверка акцизной марки" Opacity="0.7" Margin="0,3,0,0"/>
+      </StackPanel>
+      <Button Grid.Column="1" Content="＋ Добавить УТМ" Command="{Binding AddUtmCommand}" VerticalAlignment="Center"/>
     </Grid>
-    <Border Grid.Row="1" Background="{DynamicResource CardBackground}" CornerRadius="14" Padding="12" Margin="0,0,14,0">
-      <ListBox ItemsSource="{Binding NavigationItems}" SelectedIndex="0" Width="190"/>
-    </Border>
-    <ScrollViewer Grid.Row="1" Grid.Column="1" VerticalScrollBarVisibility="Auto">
+
+    <Border Grid.Row="1" Style="{StaticResource Card}">
       <Grid>
-        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-        <TextBlock Text="Дашборд" FontSize="30" FontWeight="SemiBold" Margin="0,0,0,16"/>
-        <Grid Grid.Row="1">
-          <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-          <Border Grid.Column="0" Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="УТМ"/><TextBlock Text="{Binding UtmStatus}" FontSize="22" FontWeight="SemiBold"/><TextBlock Text="{Binding Organization}"/></StackPanel></Border>
-          <Border Grid.Column="1" Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="FSRAR_ID"/><TextBlock Text="{Binding FsrarId}" FontSize="20"/></StackPanel></Border>
-          <Border Grid.Column="2" Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="Версия УТМ"/><TextBlock Text="{Binding UtmVersion}" FontSize="20"/></StackPanel></Border>
-          <Border Grid.Column="3" Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="RSA"/><TextBlock Text="{Binding CertificateDays, StringFormat=Осталось {0} дн.}" FontSize="20"/></StackPanel></Border>
-        </Grid>
-        <Grid Grid.Row="2" Margin="0,16,0,0">
-          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-          <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8"><StackPanel><TextBlock Text="Последние события" FontSize="20" FontWeight="SemiBold"/><ItemsControl ItemsSource="{Binding Events}" Margin="0,10,0,0"/></StackPanel></Border>
-          <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,8,0,0">
-            <StackPanel>
-              <TextBlock Text="AI Диагностика и логи" FontSize="20" FontWeight="SemiBold"/>
-              <TextBlock Text="Программа сохраняет диагностические события. По этим логам будем находить реальные проблемы и дорабатывать ЕГАИС Inspector." TextWrapping="Wrap" Margin="0,8,0,12"/>
-              <TextBlock Text="{Binding LogStatus}" Opacity="0.75" TextWrapping="Wrap" Margin="0,0,0,6"/>
-              <TextBlock Text="{Binding DiagnosticsStatus}" Opacity="0.85" TextWrapping="Wrap" Margin="0,0,0,12"/>
-              <WrapPanel>
-                <Button Content="Отправить диагностику" Command="{Binding UploadDiagnosticsCommand}" Padding="14,8" Margin="0,0,10,8"/>
-                <Button Content="Настроить GitHub" Command="{Binding ConfigureGitHubDiagnosticsCommand}" Padding="14,8" Margin="0,0,10,8"/>
-                <Button Content="Открыть папку логов" Command="{Binding OpenLogFolderCommand}" Padding="14,8" Margin="0,0,10,8"/>
-                <Button Content="Запустить автообновление" Command="{Binding AutoUpdateCommand}" Padding="14,8" Margin="0,0,10,8"/>
-              </WrapPanel>
-            </StackPanel>
-          </Border>
-        </Grid>
+        <Grid.ColumnDefinitions><ColumnDefinition Width="260"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel>
+          <TextBlock Text="Активный УТМ" FontWeight="SemiBold"/>
+          <ComboBox ItemsSource="{Binding Utms}" SelectedItem="{Binding SelectedUtm}" DisplayMemberPath="Name" Margin="0,7,10,0" Height="34"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Margin="14,0,14,0">
+          <TextBlock Text="Соединение" FontWeight="SemiBold"/>
+          <TextBlock Text="{Binding ConnectionStatus}" FontSize="18" Margin="0,7,0,0"/>
+          <TextBlock Text="{Binding Organization}" Opacity="0.75" Margin="0,2,0,0"/>
+        </StackPanel>
+        <Button Grid.Column="2" Content="⟳ Обновить" Command="{Binding RefreshUtmCommand}" VerticalAlignment="Center"/>
       </Grid>
+    </Border>
+
+    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+        <Grid>
+          <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+          <Border Style="{StaticResource Card}" Grid.Column="0" Margin="0,0,7,14"><StackPanel><TextBlock Text="FSRAR_ID" Opacity="0.7"/><TextBlock Text="{Binding FsrarId}" FontSize="20" FontWeight="SemiBold" Margin="0,4,0,0"/></StackPanel></Border>
+          <Border Style="{StaticResource Card}" Grid.Column="1" Margin="7,0,7,14"><StackPanel><TextBlock Text="Версия УТМ" Opacity="0.7"/><TextBlock Text="{Binding UtmVersion}" FontSize="20" FontWeight="SemiBold" Margin="0,4,0,0"/></StackPanel></Border>
+          <Border Style="{StaticResource Card}" Grid.Column="2" Margin="7,0,0,14"><StackPanel><TextBlock Text="Очередь" Opacity="0.7"/><TextBlock Text="{Binding QueueStatus}" FontSize="16" FontWeight="SemiBold" Margin="0,4,0,0" TextWrapping="Wrap"/></StackPanel></Border>
+        </Grid>
+
+        <Border Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Text="Акцизная марка" FontSize="24" FontWeight="SemiBold"/>
+            <TextBlock Text="Вставь полный DataMatrix. Программа разберёт тип/серию/номер и отправит QueryBarcode непосредственно в УТМ." Opacity="0.72" TextWrapping="Wrap" Margin="0,5,0,12"/>
+            <TextBox Text="{Binding MarkInput, UpdateSourceTrigger=PropertyChanged}" MinHeight="80" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,8">
+              <Button Content="Проверить марку через УТМ" Command="{Binding QueryMarkCommand}" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding MarkStatus}" VerticalAlignment="Center" Opacity="0.8" TextWrapping="Wrap"/>
+            </StackPanel>
+            <Border Background="{DynamicResource CardBackground}" CornerRadius="10" Padding="12" MaxHeight="260">
+              <ScrollViewer VerticalScrollBarVisibility="Auto"><TextBlock Text="{Binding MarkResult}" FontFamily="Consolas" TextWrapping="Wrap"/></ScrollViewer>
+            </Border>
+          </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}" Margin="0,0,0,4">
+          <StackPanel>
+            <TextBlock Text="Связь с УТМ" FontSize="20" FontWeight="SemiBold"/>
+            <TextBlock Text="Используются реальные HTTP-запросы к /api/info/list, /opt/out и /opt/in. Поддержаны запросы Form A, Form B, история B и остатки на уровне Core для дальнейшего расширения без возврата старого интерфейса." TextWrapping="Wrap" Opacity="0.75" Margin="0,6,0,0"/>
+            <TextBlock Text="RSA: {Binding RsaStatus}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+          </StackPanel>
+        </Border>
+      </StackPanel>
     </ScrollViewer>
   </Grid>
 </Window>
