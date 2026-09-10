@@ -1,209 +1,209 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using EGAISInspector.App;
+using EGAISInspector.Core.Barcodes;
 using EGAISInspector.Core.Services;
+using EGAISInspector.Core.Utm;
 using System.Collections.ObjectModel;
-using System.IO;
+using System.Text;
 using System.Windows;
+using EGAISInspector.App;
 
 namespace EGAISInspector.App.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
-    [ObservableProperty] private string pageTitle = "Дашборд";
-    [ObservableProperty] private string utmStatus = "Не подключен";
+    private readonly UtmProfileStore _store = new();
+    private int _queryNumber;
+
+    [ObservableProperty] private UtmProfile? selectedUtm;
+    [ObservableProperty] private string connectionStatus = "УТМ не добавлен";
     [ObservableProperty] private string organization = "—";
     [ObservableProperty] private string fsrarId = "—";
     [ObservableProperty] private string utmVersion = "—";
-    [ObservableProperty] private int certificateDays = 0;
-    [ObservableProperty] private string updateStatus = "Автообновление включено";
-    [ObservableProperty] private bool isCheckingUpdate;
-    [ObservableProperty] private string logStatus = "Лог: ещё не загружен";
-    [ObservableProperty] private string diagnosticsStatus = "GitHub: не настроен";
-    [ObservableProperty] private bool isUploadingDiagnostics;
+    [ObservableProperty] private string rsaStatus = "—";
+    [ObservableProperty] private string queueStatus = "—";
+    [ObservableProperty] private string markInput = "";
+    [ObservableProperty] private string markStatus = "Введите акцизную марку";
+    [ObservableProperty] private string markResult = "";
+    [ObservableProperty] private bool isBusy;
 
-    public ObservableCollection<string> Events { get; } = new();
-    public ObservableCollection<string> NavigationItems { get; } = new(new[]
-    {
-        "Дашборд", "Поиск по марке", "Справки А/Б", "ТТН",
-        "Остатки", "История движения", "Сертификаты и УТМ", "Отчёты", "Настройки", "AI Диагностика"
-    });
+    public ObservableCollection<UtmProfile> Utms { get; } = new();
 
     public MainViewModel()
     {
-        AppLogger.Info("Application dashboard initialized.");
-        RefreshLogStatus();
-        RefreshDiagnosticsStatus();
+        foreach (var profile in _store.Load()) Utms.Add(profile);
+        SelectedUtm = Utms.FirstOrDefault();
+        AppLogger.Info("EGAIS Inspector minimal UTM mode initialized.");
+    }
+
+    partial void OnSelectedUtmChanged(UtmProfile? value)
+    {
+        ConnectionStatus = value is null ? "УТМ не выбран" : $"Готов к подключению: {value.BaseUrl}";
+        Organization = "—";
+        FsrarId = "—";
+        UtmVersion = "—";
+        RsaStatus = "—";
+        QueueStatus = "—";
     }
 
     [RelayCommand]
-    private async Task CheckForUpdatesAsync()
+    private async Task AddUtmAsync()
     {
-        if (IsCheckingUpdate)
+        var dialog = new AddUtmWindow { Owner = Application.Current.MainWindow };
+        if (dialog.ShowDialog() != true) return;
+
+        var profile = new UtmProfile(dialog.ProfileName, dialog.BaseUrl.TrimEnd('/'));
+        var existing = Utms.FirstOrDefault(x => string.Equals(x.BaseUrl, profile.BaseUrl, StringComparison.OrdinalIgnoreCase));
+        if (existing is not null)
+        {
+            SelectedUtm = existing;
+            await RefreshUtmAsync();
             return;
+        }
 
-        IsCheckingUpdate = true;
-        UpdateStatus = "Проверяю обновления…";
-        AppLogger.Info("Manual update check started.");
+        Utms.Add(profile);
+        SelectedUtm = profile;
+        _store.Save(Utms);
+        await RefreshUtmAsync();
+    }
 
+    [RelayCommand]
+    private async Task RefreshUtmAsync()
+    {
+        if (IsBusy || SelectedUtm is null) return;
+        IsBusy = true;
+        ConnectionStatus = "Подключаюсь к УТМ…";
         try
         {
-            var result = await new UpdateService().CheckAsync(includePrerelease: true);
-            if (!result.Available)
+            using var http = new HttpClient { BaseAddress = new Uri(SelectedUtm.BaseUrl), Timeout = TimeSpan.FromSeconds(20) };
+            var client = new UtmClient(http);
+            var info = await client.GetInfoAsync();
+            if (!info.Success)
             {
-                UpdateStatus = "Обновлений нет";
-                AppLogger.Info("No update available or application is not installed with Velopack.");
+                ConnectionStatus = $"УТМ OFFLINE: {info.RawJson}";
+                MarkStatus = "Связь с УТМ отсутствует";
                 return;
             }
 
-            UpdateStatus = $"Доступна версия {result.Version}";
-            AppLogger.Info($"Update available: {result.Version}.");
+            ConnectionStatus = "УТМ ONLINE";
+            Organization = info.Organization ?? "—";
+            FsrarId = info.FsrarId ?? "—";
+            UtmVersion = info.Version ?? "—";
+            RsaStatus = info.RsaNotAfter is null
+                ? info.RsaSubject ?? "RSA данные не переданы"
+                : $"{info.RsaSubject ?? "RSA"} · до {info.RsaNotAfter:dd.MM.yyyy}";
+
+            var queue = await client.GetOutputQueueAsync();
+            QueueStatus = queue.Success
+                ? $"Очередь УТМ: {CountXmlDocuments(queue.Content)} документов · HTTP {(int)queue.StatusCode}"
+                : $"Очередь недоступна · {queue.Error ?? queue.Content}";
+
+            AppLogger.Info($"UTM connection OK: {SelectedUtm.BaseUrl}; FSRAR_ID={FsrarId}; version={UtmVersion}.");
         }
         catch (Exception ex)
         {
-            UpdateStatus = "Не удалось проверить обновления";
-            AppLogger.Error("Manual update check failed.", ex);
+            ConnectionStatus = $"УТМ ERROR: {ex.Message}";
+            AppLogger.Error("UTM connection failed.", ex);
         }
         finally
         {
-            IsCheckingUpdate = false;
-            RefreshLogStatus();
+            IsBusy = false;
         }
     }
 
     [RelayCommand]
-    private async Task AutoUpdateAsync()
+    private async Task QueryMarkAsync()
     {
-        if (IsCheckingUpdate)
+        if (IsBusy) return;
+        if (SelectedUtm is null)
+        {
+            MarkStatus = "Сначала добавьте УТМ";
             return;
+        }
 
-        IsCheckingUpdate = true;
-        UpdateStatus = "Загружаю обновление…";
-        AppLogger.Info("Manual auto-update started.");
+        var raw = MarkInput.Trim();
+        if (raw.Length == 0)
+        {
+            MarkStatus = "Введите DataMatrix акцизной марки";
+            return;
+        }
 
+        var mark = new BarcodeDecoder().Decode(raw);
+        if (mark.Kind != BarcodeKind.DataMatrix || string.IsNullOrWhiteSpace(mark.Type) || string.IsNullOrWhiteSpace(mark.Series) || string.IsNullOrWhiteSpace(mark.Number))
+        {
+            MarkStatus = "Марка не распознана. Нужен полный DataMatrix ЕГАИС.";
+            MarkResult = "";
+            return;
+        }
+
+        IsBusy = true;
+        MarkStatus = $"Запрашиваю марку {mark.Type}-{mark.Series}-{mark.Number}…";
+        MarkResult = "";
         try
         {
-            var updated = await new UpdateService().DownloadAndRestartAsync(includePrerelease: true);
-            if (updated)
+            using var http = new HttpClient { BaseAddress = new Uri(SelectedUtm.BaseUrl), Timeout = TimeSpan.FromSeconds(20) };
+            var client = new UtmClient(http);
+            var xml = QueryBarcodeBuilder.Build(
+                FsrarId == "—" ? "" : FsrarId,
+                mark.Type!, mark.Series!, mark.Number!,
+                Interlocked.Increment(ref _queryNumber).ToString());
+
+            if (FsrarId == "—")
             {
-                UpdateStatus = "Обновление загружено, выполняется перезапуск…";
-                AppLogger.Info("Update downloaded; restart requested.");
+                MarkStatus = "Сначала обновите связь с УТМ, чтобы получить FSRAR_ID.";
                 return;
             }
 
-            UpdateStatus = "Новых обновлений нет";
-            AppLogger.Info("Auto-update finished: no update was applied.");
-        }
-        catch (Exception ex)
-        {
-            UpdateStatus = "Ошибка автообновления";
-            AppLogger.Error("Manual auto-update failed.", ex);
-        }
-        finally
-        {
-            IsCheckingUpdate = false;
-            RefreshLogStatus();
-        }
-    }
-
-    [RelayCommand]
-    private async Task UploadDiagnosticsAsync()
-    {
-        if (IsUploadingDiagnostics)
-            return;
-
-        var service = new GitHubDiagnosticsService();
-        if (!service.IsConfigured)
-        {
-            var settings = new GitHubSettingsWindow { Owner = Application.Current.MainWindow };
-            settings.ShowDialog();
-            RefreshDiagnosticsStatus();
-            if (!service.IsConfigured)
-                return;
-        }
-
-        IsUploadingDiagnostics = true;
-        DiagnosticsStatus = "GitHub: отправляю диагностику…";
-        AppLogger.Info("GitHub diagnostics upload started.");
-
-        try
-        {
-            var result = await service.UploadCurrentLogAsync();
-            DiagnosticsStatus = result.Success
-                ? $"GitHub: ✓ отправлено {DateTime.Now:HH:mm:ss}"
-                : $"GitHub: {result.Message}";
-
-            if (result.Success)
-                AppLogger.Info($"GitHub diagnostics uploaded. Commit: {result.CommitSha ?? "unknown"}.");
-            else
-                AppLogger.Warning($"GitHub diagnostics upload failed: {result.Message}");
-        }
-        catch (Exception ex)
-        {
-            DiagnosticsStatus = $"GitHub: ошибка — {ex.Message}";
-            AppLogger.Error("GitHub diagnostics upload failed unexpectedly.", ex);
-        }
-        finally
-        {
-            IsUploadingDiagnostics = false;
-            RefreshLogStatus();
-        }
-    }
-
-    [RelayCommand]
-    private void ConfigureGitHubDiagnostics()
-    {
-        var settings = new GitHubSettingsWindow { Owner = Application.Current.MainWindow };
-        settings.ShowDialog();
-        RefreshDiagnosticsStatus();
-    }
-
-    [RelayCommand]
-    private void OpenLogFolder()
-    {
-        try
-        {
-            Directory.CreateDirectory(AppLogger.LogDirectory);
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            var response = await client.SendQueryBarcodeAsync(xml);
+            if (!response.Success)
             {
-                FileName = "explorer.exe",
-                Arguments = $"\"{AppLogger.LogDirectory}\"",
-                UseShellExecute = true
-            });
-            AppLogger.Info("Log folder opened by user.");
+                MarkStatus = $"Ошибка УТМ · HTTP {(int)response.StatusCode}";
+                MarkResult = response.Error ?? response.Content;
+                AppLogger.Warning($"QueryBarcode failed: HTTP {(int)response.StatusCode}; {response.Error ?? response.Content}");
+                return;
+            }
+
+            MarkStatus = $"Запрос марки принят УТМ · HTTP {(int)response.StatusCode}";
+            MarkResult = PrettyResponse(response.Content);
+            AppLogger.Info($"QueryBarcode accepted: {mark.Type}-{mark.Series}-{mark.Number}.");
+
+            await Task.Delay(500);
+            var queue = await client.GetOutputQueueAsync();
+            if (queue.Success)
+                QueueStatus = $"Очередь УТМ: {CountXmlDocuments(queue.Content)} документов · HTTP {(int)queue.StatusCode}";
         }
         catch (Exception ex)
         {
-            AppLogger.Error("Failed to open log folder.", ex);
+            MarkStatus = $"Ошибка запроса: {ex.Message}";
+            AppLogger.Error("QueryBarcode failed.", ex);
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
-    public void RefreshLogStatus()
+    private static int CountXmlDocuments(string content)
     {
         try
         {
-            var file = AppLogger.CurrentLogFile;
-            LogStatus = File.Exists(file)
-                ? $"Лог: {file} ({Math.Round(new FileInfo(file).Length / 1024d, 1)} КБ)"
-                : "Лог: файл ещё не создан";
+            var doc = System.Xml.Linq.XDocument.Parse(content);
+            return doc.Descendants().Count(x => x.Name.LocalName.Equals("Document", StringComparison.OrdinalIgnoreCase));
         }
-        catch
-        {
-            LogStatus = "Лог: недоступен";
-        }
+        catch { return 0; }
     }
 
-    private void RefreshDiagnosticsStatus()
+    private static string PrettyResponse(string content)
     {
+        if (string.IsNullOrWhiteSpace(content)) return "УТМ вернул пустой ответ. Запрос отправлен в очередь.";
         try
         {
-            DiagnosticsStatus = new GitHubDiagnosticsService().IsConfigured
-                ? "GitHub: токен настроен (DPAPI)"
-                : "GitHub: токен не настроен";
+            var doc = System.Xml.Linq.XDocument.Parse(content);
+            return doc.ToString(System.Xml.Linq.SaveOptions.None);
         }
         catch
         {
-            DiagnosticsStatus = "GitHub: статус недоступен";
+            return content;
         }
     }
 }
