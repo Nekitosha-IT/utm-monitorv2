@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EGAISInspector", "src\EGAISInspector\EGAISInspector.csproj", "{B4A8C3F0-2D37-4F70-9D0C-2F7D7A5D1A01}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EGAISInspector.Core", "src\EGAISInspector.Core\EGAISInspector.Core.csproj", "{F3C5A0C2-4A19-45D4-A4B7-9E7B2D5C8F02}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EGAISInspector.Tests", "tests\EGAISInspector.Tests\EGAISInspector.Tests.csproj", "{C6F8E3A1-7B44-4F72-8D21-3C0B6A9E5F03}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B4A8C3F0-2D37-4F70-9D0C-2F7D7A5D1A01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4A8C3F0-2D37-4F70-9D0C-2F7D7A5D1A01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4A8C3F0-2D37-4F70-9D0C-2F7D7A5D1A01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4A8C3F0-2D37-4F70-9D0C-2F7D7A5D1A01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3C5A0C2-4A19-45D4-A4B7-9E7B2D5C8F02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3C5A0C2-4A19-45D4-A4B7-9E7B2D5C8F02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3C5A0C2-4A19-45D4-A4B7-9E7B2D5C8F02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3C5A0C2-4A19-45D4-A4B7-9E7B2D5C8F02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6F8E3A1-7B44-4F72-8D21-3C0B6A9E5F03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6F8E3A1-7B44-4F72-8D21-3C0B6A9E5F03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6F8E3A1-7B44-4F72-8D21-3C0B6A9E5F03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6F8E3A1-7B44-4F72-8D21-3C0B6A9E5F03}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
