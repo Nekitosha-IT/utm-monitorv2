@@ -1,3 +1,5 @@
+using System.Net.Http;
+using System.Xml;
 using System.Xml.Linq;
 using EGAISInspector.Core.Database;
 using Microsoft.EntityFrameworkCore;
