@@ -1,0 +1,7 @@
+{
+  "FsrARId": "3463047",
+  "UtmBaseUrl": "http://localhost:8080",
+  "DatabaseDirectory": "%LOCALAPPDATA%/EGAISInspector/databases",
+  "UtmTimeoutSeconds": 30,
+  "PollIntervalSeconds": 30
+}
