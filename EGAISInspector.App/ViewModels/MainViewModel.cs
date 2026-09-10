@@ -13,7 +13,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string fsrarId = "—";
     [ObservableProperty] private string utmVersion = "—";
     [ObservableProperty] private int certificateDays = 0;
-    [ObservableProperty] private string updateStatus = "Проверка обновлений доступна";
+    [ObservableProperty] private string updateStatus = "Автообновление включено";
     [ObservableProperty] private bool isCheckingUpdate;
     [ObservableProperty] private string logStatus = "Лог: ещё не загружен";
 
@@ -57,6 +57,41 @@ public partial class MainViewModel : ObservableObject
         {
             UpdateStatus = "Не удалось проверить обновления";
             AppLogger.Error("Manual update check failed.", ex);
+        }
+        finally
+        {
+            IsCheckingUpdate = false;
+            RefreshLogStatus();
+        }
+    }
+
+    [RelayCommand]
+    private async Task AutoUpdateAsync()
+    {
+        if (IsCheckingUpdate)
+            return;
+
+        IsCheckingUpdate = true;
+        UpdateStatus = "Загружаю обновление…";
+        AppLogger.Info("Manual auto-update started.");
+
+        try
+        {
+            var updated = await new UpdateService().DownloadAndRestartAsync(includePrerelease: true);
+            if (updated)
+            {
+                UpdateStatus = "Обновление загружено, выполняется перезапуск…";
+                AppLogger.Info("Update downloaded; restart requested.");
+                return;
+            }
+
+            UpdateStatus = "Новых обновлений нет";
+            AppLogger.Info("Auto-update finished: no update was applied.");
+        }
+        catch (Exception ex)
+        {
+            UpdateStatus = "Ошибка автообновления";
+            AppLogger.Error("Manual auto-update failed.", ex);
         }
         finally
         {
