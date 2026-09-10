@@ -38,6 +38,28 @@ public sealed class TtnOut { public long Id { get; set; } public string Number {
 public sealed class MovementHistory { public long Id { get; set; } public string Mark { get; set; } = ""; public string From { get; set; } = ""; public string To { get; set; } = ""; public DateTime DateUtc { get; set; } }
 public sealed class ProductDirectory { public long Id { get; set; } public string AlcoholCode { get; set; } = ""; public string Name { get; set; } = ""; public decimal? Strength { get; set; } public decimal? Volume { get; set; } public string? Producer { get; set; } }
 
+public sealed class EgaisDocument
+{
+    public long Id { get; set; }
+    public string ExternalId { get; set; } = "";
+    public string DocumentType { get; set; } = "";
+    public string? RegId { get; set; }
+    public string? InformARegId { get; set; }
+    public string? InformBRegId { get; set; }
+    public string? Number { get; set; }
+    public DateTime? DocumentDate { get; set; }
+    public string? Sender { get; set; }
+    public string? Recipient { get; set; }
+    public string? ProductName { get; set; }
+    public string? Producer { get; set; }
+    public decimal? Quantity { get; set; }
+    public decimal? Volume { get; set; }
+    public decimal? Strength { get; set; }
+    public string? RawXml { get; set; }
+    public DateTime FirstSeenUtc { get; set; }
+    public DateTime LastSeenUtc { get; set; }
+}
+
 public sealed class EgaisDbContext(DbContextOptions<EgaisDbContext> options) : DbContext(options)
 {
     public DbSet<UtmInfo> Utms => Set<UtmInfo>();
@@ -48,11 +70,15 @@ public sealed class EgaisDbContext(DbContextOptions<EgaisDbContext> options) : D
     public DbSet<TtnOut> TtnOut => Set<TtnOut>();
     public DbSet<MovementHistory> MovementHistory => Set<MovementHistory>();
     public DbSet<ProductDirectory> ProductDirectory => Set<ProductDirectory>();
+    public DbSet<EgaisDocument> EgaisDocuments => Set<EgaisDocument>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UtmInfo>().HasIndex(x => x.FsrARId).IsUnique();
         modelBuilder.Entity<Bottle>().HasIndex(x => x.Mark).IsUnique();
         modelBuilder.Entity<ProductDirectory>().HasIndex(x => x.AlcoholCode).IsUnique();
+        modelBuilder.Entity<EgaisDocument>().HasIndex(x => x.ExternalId).IsUnique();
+        modelBuilder.Entity<EgaisDocument>().HasIndex(x => x.RegId);
+        modelBuilder.Entity<EgaisDocument>().HasIndex(x => x.InformBRegId);
     }
 }
