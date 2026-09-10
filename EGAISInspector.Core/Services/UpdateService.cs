@@ -13,17 +13,21 @@ public sealed class UpdateService
     {
         try
         {
+            ct.ThrowIfCancellationRequested();
             var manager = CreateManager(includePrerelease);
             if (!manager.IsInstalled)
                 return new(false, null, false);
 
-            var update = await manager.CheckForUpdatesAsync(ct);
+            var update = await manager.CheckForUpdatesAsync();
             if (update is null)
                 return new(false, null, false);
 
             var version = update.TargetFullRelease.Version.ToString();
-            var critical = update.TargetFullRelease.Version.Major > 0;
-            return new(true, version, critical);
+            return new(true, version, false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch
         {
@@ -35,17 +39,22 @@ public sealed class UpdateService
     {
         try
         {
+            ct.ThrowIfCancellationRequested();
             var manager = CreateManager(includePrerelease);
             if (!manager.IsInstalled)
                 return false;
 
-            var update = await manager.CheckForUpdatesAsync(ct);
+            var update = await manager.CheckForUpdatesAsync();
             if (update is null)
                 return false;
 
             await manager.DownloadUpdatesAsync(update, null, ct);
-            manager.ApplyUpdatesAndRestart(update);
+            manager.ApplyUpdatesAndRestart(update.TargetFullRelease);
             return true;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
         }
         catch
         {
