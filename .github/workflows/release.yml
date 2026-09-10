@@ -30,7 +30,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore EGAISInspector.sln
+        run: dotnet restore EGAISInspector.sln --runtime win-x64
 
       - name: Test
         run: dotnet test EGAISInspector.Tests/EGAISInspector.Tests.csproj --configuration Release --no-restore
