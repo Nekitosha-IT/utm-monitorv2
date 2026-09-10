@@ -1,3 +1,3 @@
-release v0.1.1-preview
-2026-09-10 build: diagnostics, DPAPI, GitHub upload, automatic update pipeline
-trigger: 2026-09-10T13:00:00Z
+release v0.1.2-preview
+2026-09-10 build: UTM transport, output acknowledgement, TTN XML builders
+trigger: 2026-09-10T12:45:00Z
