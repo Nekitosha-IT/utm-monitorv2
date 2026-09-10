@@ -1,4 +1,5 @@
 using EGAISInspector.Core.Services;
+using Xunit;
 
 namespace EGAISInspector.Tests;
 
